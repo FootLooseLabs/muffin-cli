@@ -1,0 +1,19 @@
+{
+  "name": "element-pacakge-manager",
+  "version": "1.0.0",
+  "description": "",
+  "author": "footloose.io",
+  "license": "ISC",
+  "bin": {
+    "epm": "./scripts/epm-cli.js"
+  },
+  "scripts": {
+    "pull": "bash ./scripts/pull-components.sh",
+    "push": "bash ./scripts/push-components.sh",
+    "pull-component": "./scripts/pull-component.sh",
+    "push-component": "./scripts/push-component.sh"
+  },
+  "dependencies": {
+    "jq": "^1.6"
+  }
+}
