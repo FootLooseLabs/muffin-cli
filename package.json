@@ -1,19 +1,19 @@
 {
-  "name": "element-pacakge-manager",
-  "version": "1.0.0",
-  "description": "",
+  "name": "@muffin/cli",
+  "version": "0.1.0",
+  "description": "muffin component registry CLI",
   "author": "footloose.io",
   "license": "ISC",
+  "type": "module",
   "bin": {
-    "epm": "./scripts/epm-cli.js"
+    "muf": "./bin/muf.js"
   },
   "scripts": {
-    "pull": "bash ./scripts/pull-components.sh",
-    "push": "bash ./scripts/push-components.sh",
-    "pull-component": "./scripts/pull-component.sh",
-    "push-component": "./scripts/push-component.sh"
+    "dev": "node bin/muf.js"
   },
   "dependencies": {
-    "jq": "^1.6"
+    "commander": "^12.0.0",
+    "chalk": "^5.0.0",
+    "ora": "^8.0.0"
   }
 }
