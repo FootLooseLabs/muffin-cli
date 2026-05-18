@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { findComponent } from '../registry.js';
 
-const COMPONENTS_BASE_URL = 'https://raw.githubusercontent.com/FootLooseLabs/muffin-components/main/ui';
+const COMPONENTS_BASE_URL = 'https://raw.githubusercontent.com/FootLooseLabs/muffin-components/main/components';
 
 export async function addCommand(name, options) {
     const spinner = ora(`Fetching ${name}...`).start();
