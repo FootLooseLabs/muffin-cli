@@ -5,50 +5,72 @@ import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const { version } = require('../package.json');
 
+import { listCommand } from '../src/commands/list.js';
 import { searchCommand } from '../src/commands/search.js';
 import { infoCommand } from '../src/commands/info.js';
-import { listCommand } from '../src/commands/list.js';
 import { addCommand } from '../src/commands/add.js';
 import { initCommand } from '../src/commands/init.js';
 import { servicesListCommand, servicesSearchCommand, servicesAddCommand } from '../src/commands/services.js';
 
 program
     .name('muf')
-    .description('muffin component and template registry CLI')
+    .description('muffin component, template, and services registry CLI')
     .version(version);
 
-program
+// ── muf components ────────────────────────────────────────────────────────────
+
+const components = program
+    .command('components')
+    .description('browse and add components from the registry');
+
+components
     .command('list')
-    .description('list all available components (or templates with --templates)')
-    .option('-t, --templates', 'list templates instead of components')
-    .action(listCommand);
+    .description('list all available components')
+    .action((_, cmd) => listCommand({ templates: false }));
 
-program
+components
     .command('search <query>')
-    .description('search components (or templates with --templates)')
-    .option('-t, --templates', 'search templates instead of components')
-    .action(searchCommand);
+    .description('search components by name, description, or tag')
+    .action((query) => searchCommand(query, { templates: false }));
 
-program
-    .command('info <component>')
-    .description('show manifest for a component')
+components
+    .command('info <name>')
+    .description('show manifest, attributes, and usage for a component')
     .action(infoCommand);
 
-program
-    .command('add <component>')
-    .description('add a component to your project')
+components
+    .command('add <name>')
+    .description('copy a component into your project')
     .option('-d, --dir <directory>', 'target directory', './src/components')
     .action(addCommand);
 
-program
-    .command('init <template>')
+// ── muf templates ─────────────────────────────────────────────────────────────
+
+const templates = program
+    .command('templates')
+    .description('browse and scaffold templates from the registry');
+
+templates
+    .command('list')
+    .description('list all available templates')
+    .action((_, cmd) => listCommand({ templates: true }));
+
+templates
+    .command('search <query>')
+    .description('search templates by name, description, or tag')
+    .action((query) => searchCommand(query, { templates: true }));
+
+templates
+    .command('init <name>')
     .description('scaffold a template into your project')
     .option('-d, --dir <directory>', 'target directory', './src')
     .action(initCommand);
 
+// ── muf services ──────────────────────────────────────────────────────────────
+
 const services = program
     .command('services')
-    .description('manage org services from a private registry');
+    .description('browse and add org services from a private registry');
 
 services
     .command('list')

@@ -18,63 +18,71 @@ muf --version
 
 | Command | What it does |
 |---------|-------------|
-| `muf list` | List all available components |
-| `muf list --templates` | List all available templates |
-| `muf search <query>` | Search components by name or description |
-| `muf search --templates <query>` | Search templates |
-| `muf info <component>` | Show manifest, attributes, and usage examples |
-| `muf add <component>` | Copy a component into your project |
-| `muf init <template>` | Scaffold a template into your project |
+| `muf components list` | List all available components |
+| `muf components search <query>` | Search components by name, description, or tag |
+| `muf components info <name>` | Show manifest, attributes, and usage examples |
+| `muf components add <name>` | Copy a component into your project |
+| `muf templates list` | List all available templates |
+| `muf templates search <query>` | Search templates |
+| `muf templates init <name>` | Scaffold a template into your project |
 | `muf services list` | List org services from a private registry |
 | `muf services search <query>` | Search org services |
-| `muf services add <name>` | Set up alias and show import for a service |
+| `muf services add <name>` | Copy a service into your project |
 
 ## Commands
 
-### `muf list`
-
-List all components available in the registry.
+### `muf components list`
 
 ```sh
-muf list
+muf components list
 ```
 
-### `muf search <query>`
-
-Search components by name or description.
+### `muf components search <query>`
 
 ```sh
-muf search editor
-muf search dialog
+muf components search editor
+muf components search dialog
 ```
 
-### `muf info <component>`
+### `muf components info <name>`
 
 Show the full manifest for a component — attributes, PostOffice interfaces, usage examples.
 
 ```sh
-muf info json-editor
-muf info confirm-dialog
+muf components info json-editor
+muf components info confirm-dialog
 ```
 
-### `muf add <component>`
+### `muf components add <name>`
 
 Copy a component from the registry into your project. Defaults to `./src/components`.
 
 ```sh
-muf add json-editor
-muf add confirm-dialog --dir ./src/components/utils
+muf components add json-editor
+muf components add confirm-dialog --dir ./src/components/utils
 ```
 
-The component source is copied directly into your project — you own it and can modify it freely. To update to a newer version, just run `muf add` again.
+Source is copied directly into your project — you own it. Run again to update to a newer version.
 
-### `muf init <template>`
+### `muf templates list`
+
+```sh
+muf templates list
+```
+
+### `muf templates search <query>`
+
+```sh
+muf templates search landing
+```
+
+### `muf templates init <name>`
 
 Scaffold a full-page template into your project. Defaults to `./src`.
 
 ```sh
-muf init saas-landing-page
-muf init dark-media-landing-page --dir ./src/pages
+muf templates init saas-landing-page
+muf templates init dark-media-landing-page --dir ./src/pages
 ```
 
 ### `muf services list`
@@ -88,8 +96,6 @@ muf services list --search upload
 
 ### `muf services search <query>`
 
-Search org services by name, description, or tag.
-
 ```sh
 muf services search brand
 muf services search upload
@@ -97,12 +103,14 @@ muf services search upload
 
 ### `muf services add <name>`
 
-Checks your project for the required vite alias and tsconfig paths — prints what to add if missing — then prints the import line ready to use.
+Copy a service into your project. TS services go to `src/muffin-services/`, vanilla to `src/web-services/`.
 
 ```sh
 muf services add AccountManagementService
-muf services add FileUploaderService
+muf services add account-management --dir ./src/services
 ```
+
+Run again to update to the latest version.
 
 ## Private registries — `.mufrc.json`
 
@@ -137,12 +145,11 @@ Private entries are merged with the public registry — private wins on name col
 
 `muf` reads from public registries by default — both are GitHub repos with a `registry.json` manifest index:
 
-- **[muffin-components](https://github.com/FootLooseLabs/muffin-components)** — single-file UI components, copied into your project with `muf add`
-- **[muffin-templates](https://github.com/FootLooseLabs/muffin-templates)** — full-page scaffolds, copied into your project with `muf init`
+- **[muffin-components](https://github.com/FootLooseLabs/muffin-components)** — single-file UI components, copied into your project with `muf components add`
+- **[muffin-templates](https://github.com/FootLooseLabs/muffin-templates)** — full-page scaffolds, copied into your project with `muf templates init`
+- **Private services registry** — service files copied into your project with `muf services add`
 
-Services work differently: they live in a shared private repo, referenced via a vite path alias. `muf services add` wires the alias and shows the import — nothing is copied.
-
-No package manager, no build step for components and templates. Source is copied directly into your project — you own it and can modify it freely.
+No package manager, no build step. Source is copied directly into your project — you own it and can modify it freely.
 
 ## Contributing
 
