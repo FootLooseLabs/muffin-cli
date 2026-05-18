@@ -63,7 +63,8 @@ services
 
 services
     .command('add <name>')
-    .description('set up alias and show import for a service')
+    .description('copy a service into your project (ts → src/muffin-services, vanilla → src/web-services)')
+    .option('-d, --dir <directory>', 'target directory (overrides stack default)')
     .action(servicesAddCommand);
 
 program.parse();

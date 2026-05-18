@@ -4,12 +4,33 @@ import fs from 'fs';
 import path from 'path';
 import { getServicesRegistries } from '../config.js';
 
+const DEFAULT_DIRS = {
+    ts:      './src/muffin-services',
+    vanilla: './src/web-services',
+};
+
+async function fetchJson(url, token) {
+    const headers = token ? { Authorization: `token ${token}` } : {};
+    const res = await fetch(url, { headers });
+    if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status}`);
+    return res.json();
+}
+
+async function fetchText(url, token) {
+    const headers = token ? { Authorization: `token ${token}` } : {};
+    const res = await fetch(url, { headers });
+    if (!res.ok) throw new Error(`Failed to fetch source (${res.status}): ${url}`);
+    return res.text();
+}
+
+function baseUrl(registryUrl) {
+    // strip /registry.json to get the directory base
+    return registryUrl.replace(/\/registry\.json$/, '');
+}
+
 async function fetchServicesRegistry(entry) {
     const token = entry.token ?? process.env.GITHUB_TOKEN;
-    const headers = token ? { Authorization: `token ${token}` } : {};
-    const res = await fetch(entry.url, { headers });
-    if (!res.ok) throw new Error(`Failed to fetch services registry: ${res.status}`);
-    const data = await res.json();
+    const data = await fetchJson(entry.url, token);
     return { ...data, _entry: entry };
 }
 
@@ -23,9 +44,7 @@ async function loadAllServicesRegistries() {
       "services": [
         {
           "url": "https://raw.githubusercontent.com/your-org/your-services/main/packages/services-ts/registry.json",
-          "stack": "ts",
-          "alias": "@hais-services",
-          "path": "../../your-services/packages/services-ts"
+          "stack": "ts"
         }
       ]
     }
@@ -128,8 +147,8 @@ export async function servicesSearchCommand(query) {
 
 // ── add ───────────────────────────────────────────────────────────────────────
 
-export async function servicesAddCommand(name) {
-    const spinner = ora(`Looking up ${name}...`).start();
+export async function servicesAddCommand(name, options) {
+    const spinner = ora(`Fetching ${name}...`).start();
     try {
         const registries = await loadAllServicesRegistries();
 
@@ -148,93 +167,31 @@ export async function servicesAddCommand(name) {
             process.exit(1);
         }
 
-        spinner.succeed(`Found ${chalk.green(name)}`);
+        const token = foundEntry.token ?? process.env.GITHUB_TOKEN;
+        const stack = found.stack ?? foundEntry.stack ?? 'ts';
 
-        // Ensure vite alias is in place
-        const viteConfigPath = findViteConfig();
-        if (viteConfigPath) {
-            ensureViteAlias(viteConfigPath, foundEntry);
-        } else {
-            console.log(chalk.yellow('\n  vite.config.js not found — add the alias manually:'));
-        }
+        // derive filename: registry entry may have explicit `file`, otherwise infer
+        const filename = found.file ?? (stack === 'ts' ? `${name}.ts` : `${name}.js`);
+        const srcUrl = `${baseUrl(foundEntry.url)}/${filename}`;
+        const source = await fetchText(srcUrl, token);
 
-        // Always print tsconfig hint for TS stack
-        const isTs = foundEntry.stack === 'ts' || name.endsWith('Service');
-        if (isTs) {
-            ensureTsConfigPaths(foundEntry);
-        }
+        // resolve target directory
+        const defaultDir = DEFAULT_DIRS[stack] ?? './src/muffin-services';
+        const targetDir = path.resolve(options.dir ?? defaultDir);
+        fs.mkdirSync(targetDir, { recursive: true });
 
-        // Print import line
-        const importPath = foundEntry.alias
-            ? `${foundEntry.alias}/${name}`
-            : `@hais-services/${name}`;
+        const destPath = path.join(targetDir, filename);
+        fs.writeFileSync(destPath, source, 'utf8');
 
+        spinner.succeed(`Added ${chalk.green(name)} → ${chalk.dim(destPath)}`);
+
+        // print import line relative to a typical src/ entry point
+        const relImport = `./${path.relative(path.resolve('./src'), destPath).replace(/\\/g, '/')}`;
         console.log(`\n  ${chalk.bold('import:')}`);
-        console.log(`  ${chalk.cyan(`import ${name} from '${importPath}'`)}\n`);
+        console.log(`  ${chalk.cyan(`import ${name} from '${relImport}'`)}\n`);
 
     } catch (e) {
         spinner.fail(chalk.red(`Error: ${e.message}`));
         process.exit(1);
     }
-}
-
-// ── helpers ───────────────────────────────────────────────────────────────────
-
-function findViteConfig() {
-    const names = ['vite.config.js', 'vite.config.ts', 'vite.config.mjs'];
-    let dir = process.cwd();
-    while (true) {
-        for (const name of names) {
-            const p = path.join(dir, name);
-            if (fs.existsSync(p)) return p;
-        }
-        const parent = path.dirname(dir);
-        if (parent === dir) return null;
-        dir = parent;
-    }
-}
-
-function ensureViteAlias(viteConfigPath, entry) {
-    const alias = entry.alias ?? '@hais-services';
-    const src = fs.readFileSync(viteConfigPath, 'utf8');
-
-    if (src.includes(alias)) {
-        console.log(chalk.dim(`\n  vite alias "${alias}" already present in ${path.basename(viteConfigPath)}`));
-        return;
-    }
-
-    const resolvedPath = entry.path
-        ? `path.resolve(__dirname, '${entry.path}')`
-        : `path.resolve(__dirname, '../../hais-services/packages/services-ts')`;
-
-    console.log(chalk.yellow(`\n  Add this alias to ${path.basename(viteConfigPath)}:`));
-    console.log(chalk.dim(`
-    resolve: {
-      alias: {
-        '${alias}': ${resolvedPath}
-      }
-    }
-`));
-}
-
-function ensureTsConfigPaths(entry) {
-    const tsconfigPath = path.join(process.cwd(), 'tsconfig.json');
-    const alias = entry.alias ?? '@hais-services';
-
-    if (fs.existsSync(tsconfigPath)) {
-        const src = fs.readFileSync(tsconfigPath, 'utf8');
-        if (src.includes(alias)) {
-            console.log(chalk.dim(`  tsconfig paths for "${alias}" already present`));
-            return;
-        }
-    }
-
-    const resolvedPath = entry.path
-        ? `${entry.path}/*`
-        : '../../hais-services/packages/services-ts/*';
-
-    console.log(chalk.yellow(`  Add to tsconfig.json compilerOptions.paths:`));
-    console.log(chalk.dim(`
-    "${alias}/*": ["${resolvedPath}"]
-`));
 }
