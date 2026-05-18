@@ -26,7 +26,8 @@ export async function searchComponents(query) {
         .filter(([name, manifest]) =>
             name.includes(q) ||
             manifest.domElName?.includes(q) ||
-            manifest.description?.toLowerCase().includes(q)
+            manifest.description?.toLowerCase().includes(q) ||
+            manifest.tags?.some(t => t.toLowerCase().includes(q))
         )
         .map(([name, manifest]) => ({ name, ...manifest }));
 }
