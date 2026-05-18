@@ -10,6 +10,7 @@ import { infoCommand } from '../src/commands/info.js';
 import { listCommand } from '../src/commands/list.js';
 import { addCommand } from '../src/commands/add.js';
 import { initCommand } from '../src/commands/init.js';
+import { servicesListCommand, servicesSearchCommand, servicesAddCommand } from '../src/commands/services.js';
 
 program
     .name('muf')
@@ -44,5 +45,25 @@ program
     .description('scaffold a template into your project')
     .option('-d, --dir <directory>', 'target directory', './src')
     .action(initCommand);
+
+const services = program
+    .command('services')
+    .description('manage org services from a private registry');
+
+services
+    .command('list')
+    .description('list available services')
+    .option('-s, --search <query>', 'filter by name, description, or tag')
+    .action(servicesListCommand);
+
+services
+    .command('search <query>')
+    .description('search services by name, description, or tag')
+    .action(servicesSearchCommand);
+
+services
+    .command('add <name>')
+    .description('set up alias and show import for a service')
+    .action(servicesAddCommand);
 
 program.parse();

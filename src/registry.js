@@ -1,26 +1,40 @@
+import { getPrivateComponentRegistries, getPrivateTemplateRegistries } from './config.js';
+
 const COMPONENTS_REGISTRY_URL = 'https://raw.githubusercontent.com/FootLooseLabs/muffin-components/main/registry.json';
 const TEMPLATES_REGISTRY_URL  = 'https://raw.githubusercontent.com/FootLooseLabs/muffin-templates/main/registry.json';
 
 let _componentsCache = null;
 let _templatesCache  = null;
 
-export async function fetchRegistry() {
-    if (_componentsCache) return _componentsCache;
-    const res = await fetch(COMPONENTS_REGISTRY_URL);
-    if (!res.ok) throw new Error(`Failed to fetch components registry: ${res.status}`);
-    _componentsCache = await res.json();
-    return _componentsCache;
-}
-
-export async function fetchTemplatesRegistry() {
-    if (_templatesCache) return _templatesCache;
-    const res = await fetch(TEMPLATES_REGISTRY_URL);
-    if (!res.ok) throw new Error(`Failed to fetch templates registry: ${res.status}`);
-    _templatesCache = await res.json();
-    return _templatesCache;
+async function fetchJson(url, token) {
+    const headers = token ? { Authorization: `token ${token}` } : {};
+    const res = await fetch(url, { headers });
+    if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status}`);
+    return res.json();
 }
 
 // ── Components ────────────────────────────────────────────────────────────────
+
+export async function fetchRegistry() {
+    if (_componentsCache) return _componentsCache;
+
+    const token = process.env.GITHUB_TOKEN;
+    const base = await fetchJson(COMPONENTS_REGISTRY_URL, token);
+
+    // merge private registries — private entry wins on name collision
+    const privateUrls = getPrivateComponentRegistries();
+    for (const url of privateUrls) {
+        try {
+            const priv = await fetchJson(url, token);
+            Object.assign(base.components, priv.components ?? {});
+        } catch {
+            // skip unreachable private registries silently
+        }
+    }
+
+    _componentsCache = base;
+    return _componentsCache;
+}
 
 export async function findComponent(name) {
     const registry = await fetchRegistry();
@@ -47,6 +61,26 @@ export async function allComponents() {
 }
 
 // ── Templates ─────────────────────────────────────────────────────────────────
+
+export async function fetchTemplatesRegistry() {
+    if (_templatesCache) return _templatesCache;
+
+    const token = process.env.GITHUB_TOKEN;
+    const base = await fetchJson(TEMPLATES_REGISTRY_URL, token);
+
+    const privateUrls = getPrivateTemplateRegistries();
+    for (const url of privateUrls) {
+        try {
+            const priv = await fetchJson(url, token);
+            Object.assign(base.templates, priv.templates ?? {});
+        } catch {
+            // skip unreachable private registries silently
+        }
+    }
+
+    _templatesCache = base;
+    return _templatesCache;
+}
 
 export async function findTemplate(name) {
     const registry = await fetchTemplatesRegistry();
