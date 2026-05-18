@@ -1,6 +1,6 @@
 # muffin-cli
 
-Command-line interface for the [muffin framework](https://github.com/FootLooseLabs/element). Browse, search, and add components from [muffin-components](https://github.com/FootLooseLabs/muffin-components) — and scaffold full-page templates from [muffin-templates](https://github.com/FootLooseLabs/muffin-templates) — directly into your project.
+Command-line interface for the [muffin framework](https://github.com/FootLooseLabs/element). Browse, search, and add components from [muffin-components](https://github.com/FootLooseLabs/muffin-components), scaffold full-page templates from [muffin-templates](https://github.com/FootLooseLabs/muffin-templates), and manage org services from a private services registry — all from the terminal.
 
 ## Install
 
@@ -25,6 +25,9 @@ muf --version
 | `muf info <component>` | Show manifest, attributes, and usage examples |
 | `muf add <component>` | Copy a component into your project |
 | `muf init <template>` | Scaffold a template into your project |
+| `muf services list` | List org services from a private registry |
+| `muf services search <query>` | Search org services |
+| `muf services add <name>` | Set up alias and show import for a service |
 
 ## Commands
 
@@ -65,14 +68,79 @@ muf add confirm-dialog --dir ./src/components/utils
 
 The component source is copied directly into your project — you own it and can modify it freely. To update to a newer version, just run `muf add` again.
 
+### `muf init <template>`
+
+Scaffold a full-page template into your project. Defaults to `./src`.
+
+```sh
+muf init saas-landing-page
+muf init dark-media-landing-page --dir ./src/pages
+```
+
+### `muf services list`
+
+List org services from your configured private services registry.
+
+```sh
+muf services list
+muf services list --search upload
+```
+
+### `muf services search <query>`
+
+Search org services by name, description, or tag.
+
+```sh
+muf services search brand
+muf services search upload
+```
+
+### `muf services add <name>`
+
+Checks your project for the required vite alias and tsconfig paths — prints what to add if missing — then prints the import line ready to use.
+
+```sh
+muf services add AccountManagementService
+muf services add FileUploaderService
+```
+
+## Private registries — `.mufrc.json`
+
+`muf` supports private org registries for components, templates, and services via a `.mufrc.json` file placed in your project root (or any ancestor directory).
+
+```json
+{
+  "registries": {
+    "components": [
+      "https://raw.githubusercontent.com/your-org/your-components/main/registry.json"
+    ],
+    "templates": [
+      "https://raw.githubusercontent.com/your-org/your-templates/main/registry.json"
+    ],
+    "services": [
+      {
+        "url": "https://raw.githubusercontent.com/your-org/your-services/main/packages/services-ts/registry.json",
+        "stack": "ts",
+        "alias": "@org-services",
+        "path": "../../your-services/packages/services-ts"
+      }
+    ]
+  }
+}
+```
+
+Private entries are merged with the public registry — private wins on name collision. For private GitHub repos, set `GITHUB_TOKEN` in your environment and it will be used automatically.
+
 ## How it works
 
-`muf` reads from two public registries — both are GitHub repos with a `registry.json` manifest index:
+`muf` reads from public registries by default — both are GitHub repos with a `registry.json` manifest index:
 
 - **[muffin-components](https://github.com/FootLooseLabs/muffin-components)** — single-file UI components, copied into your project with `muf add`
 - **[muffin-templates](https://github.com/FootLooseLabs/muffin-templates)** — full-page scaffolds, copied into your project with `muf init`
 
-No package manager, no build step. Source is copied directly into your project — you own it and can modify it freely.
+Services work differently: they live in a shared private repo, referenced via a vite path alias. `muf services add` wires the alias and shows the import — nothing is copied.
+
+No package manager, no build step for components and templates. Source is copied directly into your project — you own it and can modify it freely.
 
 ## Contributing
 
