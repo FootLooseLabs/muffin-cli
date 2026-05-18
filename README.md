@@ -1,11 +1,11 @@
 # muffin-cli
 
-Command-line interface for the [muffin framework](https://github.com/FootLooseLabs/element). Browse, search, and add components from the [muffin component registry](https://github.com/FootLooseLabs/muffin-components) directly into your project.
+Command-line interface for the [muffin framework](https://github.com/FootLooseLabs/element). Browse, search, and add components from [muffin-components](https://github.com/FootLooseLabs/muffin-components) — and scaffold full-page templates from [muffin-templates](https://github.com/FootLooseLabs/muffin-templates) — directly into your project.
 
 ## Install
 
 ```sh
-npm install -g @muffin/cli
+npm install -g github:FootLooseLabs/muffin-cli
 ```
 
 **Verify:**
@@ -19,9 +19,12 @@ muf --version
 | Command | What it does |
 |---------|-------------|
 | `muf list` | List all available components |
+| `muf list --templates` | List all available templates |
 | `muf search <query>` | Search components by name or description |
+| `muf search --templates <query>` | Search templates |
 | `muf info <component>` | Show manifest, attributes, and usage examples |
 | `muf add <component>` | Copy a component into your project |
+| `muf init <template>` | Scaffold a template into your project |
 
 ## Commands
 
@@ -64,8 +67,14 @@ The component source is copied directly into your project — you own it and can
 
 ## How it works
 
-`muf` reads from the [muffin-components](https://github.com/FootLooseLabs/muffin-components) registry — a public GitHub repo containing component source and a `registry.json` manifest index. No package manager, no build step — components are plain JavaScript files that work directly with the muffin framework.
+`muf` reads from two public registries — both are GitHub repos with a `registry.json` manifest index:
 
-## Contributing a component
+- **[muffin-components](https://github.com/FootLooseLabs/muffin-components)** — single-file UI components, copied into your project with `muf add`
+- **[muffin-templates](https://github.com/FootLooseLabs/muffin-templates)** — full-page scaffolds, copied into your project with `muf init`
 
-To add a component to the registry, open a pull request on [muffin-components](https://github.com/FootLooseLabs/muffin-components). See the [contributing guide](https://github.com/FootLooseLabs/muffin-components/blob/main/CONTRIBUTING.md) for the component structure and manifest format.
+No package manager, no build step. Source is copied directly into your project — you own it and can modify it freely.
+
+## Contributing
+
+- **Component** — open a PR on [muffin-components](https://github.com/FootLooseLabs/muffin-components). See the [contributing guide](https://github.com/FootLooseLabs/muffin-components/blob/main/CONTRIBUTING.md).
+- **Template** — open a PR on [muffin-templates](https://github.com/FootLooseLabs/muffin-templates). See the [contributing guide](https://github.com/FootLooseLabs/muffin-templates/blob/main/CONTRIBUTING.md).
