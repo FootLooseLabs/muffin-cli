@@ -9,15 +9,23 @@ import { searchCommand } from '../src/commands/search.js';
 import { infoCommand } from '../src/commands/info.js';
 import { listCommand } from '../src/commands/list.js';
 import { addCommand } from '../src/commands/add.js';
+import { initCommand } from '../src/commands/init.js';
 
 program
     .name('muf')
-    .description('muffin component registry CLI')
+    .description('muffin component and template registry CLI')
     .version(version);
 
 program
+    .command('list')
+    .description('list all available components (or templates with --templates)')
+    .option('-t, --templates', 'list templates instead of components')
+    .action(listCommand);
+
+program
     .command('search <query>')
-    .description('search for components in the registry')
+    .description('search components (or templates with --templates)')
+    .option('-t, --templates', 'search templates instead of components')
     .action(searchCommand);
 
 program
@@ -26,14 +34,15 @@ program
     .action(infoCommand);
 
 program
-    .command('list')
-    .description('list all available components')
-    .action(listCommand);
-
-program
     .command('add <component>')
     .description('add a component to your project')
     .option('-d, --dir <directory>', 'target directory', './src/components')
     .action(addCommand);
+
+program
+    .command('init <template>')
+    .description('scaffold a template into your project')
+    .option('-d, --dir <directory>', 'target directory', './src')
+    .action(initCommand);
 
 program.parse();
