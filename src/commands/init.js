@@ -51,7 +51,7 @@ export async function initCommand(name, options) {
         if (manifest.components?.length) {
             console.log(`\n  ${chalk.bold('run next:')}`);
             for (const c of manifest.components) {
-                console.log(`  ${chalk.cyan(`muf add ${c}`)}`);
+                console.log(`  ${chalk.cyan(`muf components add ${c}`)}`);
             }
         }
 
